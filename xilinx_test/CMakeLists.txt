@@ -1,6 +1,9 @@
+cmake_minimum_required(VERSION 3.3)
+project(XilinxTest CXX)
+
 # User options
-set(HLSLIB_PART_NAME "xcvu9p-flgb2104-2-i" CACHE STRING "Part name for HLS.")
-set(HLSLIB_DSA_NAME "xilinx_vcu1525_dynamic_5_1" CACHE STRING "DSA string for v++/xocc.")
+set(HLSLIB_PART_NAME "xczu7ev-ffvc1156-2-e" CACHE STRING "Part name for HLS.")
+set(HLSLIB_DSA_NAME "zcu104_dpu" CACHE STRING "DSA string for v++/xocc.")
 
 include_directories(${Vitis_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/include)
 
@@ -48,7 +51,7 @@ else()
   message(WARNING "Threads not found. Disabling multi-PE kernel tests.")
 endif()
 
-set(SYNTHESIS_FLAGS "-DHLSLIB_SYNTHESIS -DHLSLIB_XILINX -std=c++11 -I${CMAKE_CURRENT_SOURCE_DIR}/include -I${CMAKE_SOURCE_DIR}/include -I.")
+set(SYNTHESIS_FLAGS "-DHLSLIB_SYNTHESIS -DHLSLIB_XILINX -DVITIS_MAJOR_VERSION=${VITIS_MAJOR_VERSION}\ -std=c++11 -I${CMAKE_CURRENT_SOURCE_DIR}/include -I${CMAKE_SOURCE_DIR}/include -I.")
 
 function(synthesis_target KERNEL_NAME ADDITIONAL_FLAGS FORCE_VIVADO_HLS)
   set(HLSLIB_PROJECT_NAME "${KERNEL_NAME}")
