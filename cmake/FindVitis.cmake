@@ -129,8 +129,8 @@ set(Vitis_USE_XRT ${VITIS_USE_XRT} CACHE STRING "Use XRT as runtime. Otherwise, 
 
 # Currently only x86 support
 
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
-
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)|(aarch64)")
+  message(STATUS "Compiling for architecture: ${CMAKE_SYSTEM_PROCESSOR}")
   #----------------------------------------------------------------------------
   # Floating point library
   #----------------------------------------------------------------------------
@@ -206,9 +206,22 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
 
     # XRT doesn't ship with its own OpenCL headers and standard OpenCL library:
     # use system OpenCL libraries and headers.
-    find_package(OpenCL REQUIRED)
-    set(Vitis_OPENCL_INCLUDE_DIR ${OpenCL_INCLUDE_DIRS})
+    # XRT doesn't ship with its own OpenCL headers and standard OpenCL library:
+    if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+      # use system OpenCL libraries and headers.
+      find_package(OpenCL REQUIRED)
+    else()
+      
+      if(NOT DEFINED OpenCL_LIBRARIES)
+        message(FATAL_ERROR "OpenCL library was not found for aarch64. You can specify it with the OpenCL_LIBRARIES variable.")
+      endif()
+      if(NOT DEFINED OpenCL_INCLUDE_DIRS)
+        message(FATAL_ERROR "OpenCL include files was not found for aarch64. You can specify it with the OpenCL_INCLUDE_DIRS variable.")
+      endif()
 
+    endif()
+
+    set(Vitis_OPENCL_INCLUDE_DIR ${OpenCL_INCLUDE_DIRS})
   endif()
 
   find_library(Vitis_LIBXILINXOPENCL xilinxopencl
@@ -235,7 +248,7 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
       "${CMAKE_INSTALL_RPATH}:${VITIS_RUNTIME_LIB_FOLDER}:${VITIS_FP_DIR}")
 
   find_path(Vitis_OPENCL_EXTENSIONS_INCLUDE_DIR cl_ext.h
-            PATHS ${VITIS_RUNTIME_DIR}/include
+            PATHS ${VITIS_RUNTIME_DIR}/include/xrt/
             PATH_SUFFIXES 1_1/CL 1_2/CL 2_0/CL CL
             NO_DEFAULT_PATH)
   get_filename_component(Vitis_OPENCL_EXTENSIONS_INCLUDE_DIR 
@@ -255,7 +268,8 @@ else()
 
 endif()
 
-set(Vitis_EXPORTS
+if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+  set(Vitis_EXPORTS
     Vitis_COMPILER
     Vitis_HLS
     Vitis_INCLUDE_DIRS
@@ -264,8 +278,17 @@ set(Vitis_EXPORTS
     Vitis_VERSION
     Vitis_MAJOR_VERSION
     Vitis_MINOR_VERSION)
+else()
+  set(Vitis_EXPORTS
+    Vitis_COMPILER
+    Vitis_HLS
+    Vitis_INCLUDE_DIRS
+    Vitis_LIBRARIES
+    Vitis_VERSION
+    Vitis_MAJOR_VERSION
+    Vitis_MINOR_VERSION)
+endif()
 mark_as_advanced(Vitis_EXPORTS)
-
 include(FindPackageHandleStandardArgs)
 # Handle the QUIETLY and REQUIRED arguments and set Vitis_FOUND to TRUE if all
 # listed variables were found.
